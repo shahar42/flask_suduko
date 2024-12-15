@@ -1,4 +1,0 @@
-pip freeze
-Flask
-Pillow
-gunicorn
