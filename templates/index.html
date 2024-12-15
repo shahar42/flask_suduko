@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Solver Image Upload</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Basic page styling */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(120deg, #89f7fe, #66a6ff);
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: #fff;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 3px;
+            animation: fadeIn 1.5s ease;
+        }
+
+        /* Form styling */
+        form {
+            background-color: #fff;
+            padding: 50px;
+            border-radius: 12px;
+            box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 80%;
+            max-width: 500px;
+            transition: transform 0.3s ease;
+        }
+
+        form:hover {
+            transform: scale(1.05);
+        }
+
+        input[type="file"] {
+            padding: 15px;
+            border: 2px solid #66a6ff;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            background-color: #f5f5f5;
+            transition: all 0.3s ease;
+        }
+
+        input[type="file"]:hover {
+            border-color: #4CAF50;
+            background-color: #e0ffe0;
+        }
+
+        input[type="submit"] {
+            background-color: #66a6ff;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.3em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #4CAF50;
+            transform: translateY(-4px);
+        }
+
+        input[type="submit"]:active {
+            transform: translateY(0);
+        }
+
+        /* Processed image section */
+        .processed-image {
+            margin-top: 40px;
+            animation: fadeIn 1.5s ease;
+        }
+
+        .processed-image img {
+            max-width: 100%;
+            height: auto;
+            border: 5px solid #66a6ff;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .processed-image img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 60px;
+            color: #fff;
+            font-size: 1em;
+            font-weight: 600;
+        }
+
+        .footer a {
+            color: #66a6ff;
+            text-decoration: none;
+        }
+
+        /* Keyframe animation for fade-in effect */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Responsiveness */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            form {
+                width: 90%;
+            }
+
+            input[type="submit"] {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Sudoku Solver: Upload an Image for Processing</h1>
+
+    <!-- Form to upload image -->
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" required>
+        <input type="submit" value="Upload Image">
+    </form>
+
+    <!-- Display processed image if available -->
+    {% if filename %}
+        <div class="processed-image">
+            <h2>Processed Image:</h2>
+            <img src="{{ url_for('static', filename='images/' + filename) }}" alt="Processed Sudoku Image">
+        </div>
+    {% endif %}
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>&copy; 2024 Sudoku Solver | <a href="https://github.com/your-repo" target="_blank">GitHub</a></p>
+    </div>
+
+</body>
+</html>
