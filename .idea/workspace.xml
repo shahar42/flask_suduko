@@ -6,7 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="63b22fcd-a7de-4c66-8ab8-18afb097c575" name="Changes" comment="new project">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/index.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -100,7 +99,7 @@
       <workItem from="1734179451179" duration="11440000" />
       <workItem from="1734224596349" duration="6131000" />
       <workItem from="1734270945043" duration="7513000" />
-      <workItem from="1734278587461" duration="296000" />
+      <workItem from="1734278587461" duration="1418000" />
     </task>
     <task id="LOCAL-00001" summary="new project">
       <option name="closed" value="true" />
@@ -170,6 +169,6 @@
     <option name="LAST_COMMIT_MESSAGE" value="new project" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/flask_suduko$flask_suduko.coverage" NAME="flask_suduko Coverage Results" MODIFIED="1734278928239" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/flask_suduko$flask_suduko.coverage" NAME="flask_suduko Coverage Results" MODIFIED="1734280006120" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
