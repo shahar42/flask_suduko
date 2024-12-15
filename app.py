@@ -5,7 +5,7 @@ import numpy as np
 import tempfile
 import os
 from io import BytesIO
-from PIL import Image
+
 
 # Initialize the Flask app
 app = Flask(__name__)
@@ -13,8 +13,13 @@ app = Flask(__name__)
 # Allowed file extensions for uploads
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
+
 def allowed_file(filename):
+    """
+    Check if uploaded file has an allowed extension.
+    """
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 def warp_and_split_sudoku(image_path, output_folder):
     """
@@ -55,12 +60,11 @@ def warp_and_split_sudoku(image_path, output_folder):
         pts = pts.reshape(4, 2)
         sum_pts = pts.sum(axis=1)
         diff_pts = np.diff(pts, axis=1)
-        return np.array([
-            pts[np.argmin(sum_pts)],  # Top-left
-            pts[np.argmin(diff_pts)],  # Top-right
-            pts[np.argmax(sum_pts)],  # Bottom-right
-            pts[np.argmax(diff_pts)],  # Bottom-left
-        ], dtype="float32")
+        return np.array([pts[np.argmin(sum_pts)],  # Top-left
+                         pts[np.argmin(diff_pts)],  # Top-right
+                         pts[np.argmax(sum_pts)],  # Bottom-right
+                         pts[np.argmax(diff_pts)],  # Bottom-left
+                        ], dtype="float32")
 
     ordered_pts = reorder_points(largest_contour)
 
@@ -88,6 +92,7 @@ def warp_and_split_sudoku(image_path, output_folder):
 
     return squares
 
+
 def generate_preview_image(squares, grid_size=9, square_size=50):
     """
     Combines 81 squares into a single preview image.
@@ -102,76 +107,46 @@ def generate_preview_image(squares, grid_size=9, square_size=50):
                 resized_square = cv2.cvtColor(resized_square, cv2.COLOR_GRAY2BGR)
             x_start = col * square_size
             y_start = row * square_size
-            grid_image[y_start:y_start+square_size, x_start:x_start+square_size] = resized_square
+            grid_image[y_start:y_start + square_size, x_start:x_start + square_size] = resized_square
 
     return grid_image
 
+
 @app.route("/", methods=["GET", "POST"])
 def index():
+    """
+    Handles file upload from the user and returns the generated image preview or error.
+    """
     if request.method == "POST":
-        # Process the file upload and return the processed image
         if 'file' not in request.files:
             return render_template("error.html", message="No file uploaded."), 400
 
         file = request.files['file']
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            temp_dir = tempfile.TemporaryDirectory()
-            temp_path = temp_dir.name
 
-            # Save the uploaded file
-            file_path = os.path.join(temp_path, filename)
-            file.save(file_path)
+            with tempfile.TemporaryDirectory() as temp_dir:
+                temp_path = os.path.join(temp_dir, filename)
+                file.save(temp_path)
 
-            # Process the image and generate squares
-            try:
-                squares = warp_and_split_sudoku(file_path, temp_path)
-            except ValueError as e:
-                return render_template("error.html", message=str(e)), 400
+                try:
+                    squares = warp_and_split_sudoku(temp_path, temp_dir)
+                except ValueError as e:
+                    return render_template("error.html", message=str(e)), 400
 
-            # Generate a preview image
-            preview_image = generate_preview_image(squares)
-            _, buffer = cv2.imencode(".jpg", preview_image)
-            preview_bytes = BytesIO(buffer.tobytes())
+                preview_image = generate_preview_image(squares)
+                _, buffer = cv2.imencode(".jpg", preview_image)
+                preview_bytes = BytesIO(buffer.tobytes())
 
-            # Send the preview image as a response
-            return send_file(preview_bytes, mimetype="image/jpeg")
+                return send_file(preview_bytes, mimetype="image/jpeg")
         else:
             return render_template("error.html", message="Invalid file type. Only PNG, JPG, and JPEG are allowed."), 400
     else:
-        # Handle GET request (render the form)
         return render_template("index.html")
 
-@app.route("/process", methods=["POST"])
-def process_image():
-    if 'file' not in request.files:
-        return render_template("error.html", message="No file uploaded."), 400
-
-    file = request.files['file']
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        temp_dir = tempfile.TemporaryDirectory()
-        temp_path = temp_dir.name
-
-        # Save the uploaded file
-        file_path = os.path.join(temp_path, filename)
-        file.save(file_path)
-
-        # Process the image and generate squares
-        try:
-            squares = warp_and_split_sudoku(file_path, temp_path)
-        except ValueError as e:
-            return render_template("error.html", message=str(e)), 400
-
-        # Generate a preview image
-        preview_image = generate_preview_image(squares)
-        _, buffer = cv2.imencode(".jpg", preview_image)
-        preview_bytes = BytesIO(buffer.tobytes())
-
-        # Send the preview image as a response
-        return send_file(preview_bytes, mimetype="image/jpeg")
-
-    return render_template("error.html", message="Invalid file type. Only PNG, JPG, and JPEG are allowed."), 400
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Heroku Port Dynamic Handling
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=True, host="0.0.0.0", port=port)
+
