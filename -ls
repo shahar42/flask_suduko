@@ -1,0 +1,53 @@
+[33mcommit 04c9f3848bdefb36a760fb54aba9deeb0b78ffd4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: shahar42 <nitzanshahar42@gmail.com>
+Date:   Sun Dec 15 18:31:31 2024 +0200
+
+    Update HTML code
+
+[33mcommit 0b10b94e911c2cc19cffdce69742bdca3056a5d7[m
+Author: shahar42 <nitzanshahar42@gmail.com>
+Date:   Sun Dec 15 18:12:08 2024 +0200
+
+    Updated subtitle and ensured it's visible on the server
+
+[33mcommit 239aa16c087d52d4c8df1c6d481121941addb93b[m[33m ([m[1;31mheroku/main[m[33m)[m
+Author: shahar42 <nitzanshahar42@gmail.com>
+Date:   Sun Dec 15 17:47:15 2024 +0200
+
+    Add APT dependencies for OpenCV compatibility
+
+[33mcommit 29be85fa5e627072f7b1ef825c430c5919c965b4[m
+Author: shahar42 <nitzanshahar42@gmail.com>
+Date:   Sun Dec 15 17:32:39 2024 +0200
+
+    Fix deployment - install gunicorn
+
+[33mcommit 9cf9b4a7810469e0b58ae1c055f49c550d786062[m
+Author: shahar42 <nitzanshahar42@gmail.com>
+Date:   Sun Dec 15 17:19:10 2024 +0200
+
+    Apply updates and fixes
+
+[33mcommit b2817a08628373fd344a43b89fe742a53dd08269[m
+Author: shahar42 <nitzanshahar42@gmail.com>
+Date:   Sun Dec 15 16:11:37 2024 +0200
+
+    first commit
+
+[33mcommit 9bb8974e866d7afad0f7f8d33ad5eaa668c07c80[m
+Author: shahar42 <nitzanshahar42@gmail.com>
+Date:   Sun Dec 15 02:51:47 2024 +0200
+
+    new project
+
+[33mcommit 177385bada334eadc27d4a8d5ad347d5fba3ff39[m
+Author: shahar42 <nitzanshahar42@gmail.com>
+Date:   Sat Dec 14 13:31:26 2024 +0200
+
+    new project
+
+[33mcommit 275c48ff5d13aee7d693ad058266a7e7e96d672e[m
+Author: shahar42 <nitzanshahar42@gmail.com>
+Date:   Sun Dec 15 16:09:41 2024 +0200
+
+    Initial commit
