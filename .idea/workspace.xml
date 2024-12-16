@@ -7,7 +7,6 @@
     <list default="true" id="63b22fcd-a7de-4c66-8ab8-18afb097c575" name="Changes" comment="new project">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/index.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -100,7 +99,7 @@
       <workItem from="1734179451179" duration="11440000" />
       <workItem from="1734224596349" duration="6131000" />
       <workItem from="1734270945043" duration="7513000" />
-      <workItem from="1734278587461" duration="15084000" />
+      <workItem from="1734278587461" duration="18060000" />
     </task>
     <task id="LOCAL-00001" summary="new project">
       <option name="closed" value="true" />
