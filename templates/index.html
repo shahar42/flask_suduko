@@ -3,178 +3,261 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sudoku Solver Solver online</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <title>Sudoku Solver</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* Basic page styling */
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(120deg, #89f7fe, #66a6ff);
-            color: #333;
+        :root {
+            --primary-color: #3b82f6;
+            --secondary-color: #10b981;
+            --background-gradient: linear-gradient(135deg, #f0f9ff 0%, #cbebff 100%);
+            --shadow-subtle: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            flex-direction: column;
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 2.5em;
-            color: #fff;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            font-weight: 600;
-            letter-spacing: 3px;
-            animation: fadeIn 1.5s ease;
-        }
-
-        /* Subtitle Styling with animation */
-        .subtitle {
-            font-size: 1em;
-            color: #555;
-            margin-bottom: 20px;
-            font-weight: 400;
-            animation: fadeIn 2s ease-in-out;
-        }
-
-        /* Form styling */
-        form {
-            background-color: #fffff2;
-            padding: 50px;
-            border-radius: 12px;
-            box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.2);
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            width: 80%;
-            max-width: 500px;
-            transition: transform 0.3s ease;
-        }
-
-        form:hover {
-            transform: scale(1.05);
-        }
-
-        input[type="file"] {
-            padding: 15px;
-            border: 2px solid #66a6ff;
-            border-radius: 10px;
-            font-size: 1.1em;
-            cursor: pointer;
-            background-color: #f933f955;
+            box-sizing: border-box;
             transition: all 0.3s ease;
         }
 
-        input[type="file"]:hover {
-            border-color: #4CAF50;
-            background-color: #e0ffe0;
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: var(--background-gradient);
+            color: #1f2937;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        input[type="submit"] {
-            background-color: #41a6ff;
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.3em;
+        .container {
+            max-width: 600px;
+            width: 90%;
+            margin: auto;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 2rem;
+            font-weight: 300;
+        }
+
+        .upload-container {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-subtle);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        input[type="file"] {
+            position: absolute;
+            opacity: 0;
             cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.3s ease;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
         }
 
-        input[type="submit"]:hover {
-            background-color: #4CAF50;
-            transform: translateY(-4px);
-        }
-
-        input[type="submit"]:active {
-            transform: translateY(0);
-        }
-
-        /* Processed image section */
-        .processed-image {
-            margin-top: 40px;
-            animation: fadeIn 1.5s ease;
-        }
-
-        .processed-image img {
-            max-width: 100%;
-            height: auto;
-            border: 5px solid #66a6ff;
+        .file-input-label {
+            display: block;
+            border: 2px dashed var(--primary-color);
+            padding: 1rem;
             border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .processed-image img:hover {
-            transform: scale(1.05);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Footer */
-        .footer {
-            margin-top: 60px;
-            color: #fff;
-            font-size: 1em;
+            color: var(--primary-color);
+            cursor: pointer;
             font-weight: 600;
         }
 
-        .footer a {
-            color: #66a6ff;
-            text-decoration: none;
+        .file-input-label:hover {
+            background-color: rgba(59, 130, 246, 0.05);
         }
 
-        /* Keyframe animation for fade-in effect */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: var(--shadow-subtle);
         }
 
-        /* Responsiveness */
+        button:hover {
+            background-color: #2563eb;
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        .error {
+            color: #dc2626;
+            margin-top: 1rem;
+            font-weight: 500;
+        }
+
+        footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 1rem;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
         @media (max-width: 600px) {
-            h1 {
-                font-size: 2em;
-            }
-
-            form {
-                width: 90%;
-            }
-
-            input[type="submit"] {
-                font-size: 1.1em;
+            .container {
+                padding: 1rem;
             }
         }
     </style>
 </head>
 <body>
+    <div class="container">
+        <h1>Sudoku Solver</h1>
+        <p class="subtitle">Upload your puzzle and watch the magic unfold</p>
 
-    <h1>Sudoku Solver: Upload an Image for Processing</h1>
-    <h3 class="subtitle">by: Shahar Nitzan</h3>
-
-    <!-- Form to upload image -->
-    <form method="POST" enctype="multipart/form-data">
-        <input type="file" name="file" required>
-        <input type="submit" value="Upload Image">
-    </form>
-
-    <!-- Display processed image if available -->
-    {% if filename %}
-        <div class="processed-image">
-            <h2>Processed Image:</h2>
-            <img src="{{ url_for('static', filename='images/' + filename) }}" alt="Processed Sudoku Image">
+        <div class="upload-container">
+            <div class="file-input-wrapper">
+                <input type="file" id="sudoku-image" name="sudoku_image" accept="image/*" required>
+                <label for="sudoku-image" class="file-input-label">
+                    Select Sudoku Image
+                </label>
+            </div>
+            <button type="submit" id="solve-button">Solve My Sudoku</button>
         </div>
-    {% endif %}
 
-    <!-- Footer -->
-    <div class="footer">
-        <p>&copy; 2024 Sudoku Solver | <a href="https://github.com/your-repo" target="_blank">GitHub</a></p>
+        <div id="error" class="error"></div>
     </div>
 
+    <footer>
+        Crafted with precision · © 2025 Sudoku Solver
+    </footer>
+
+    <script>
+        const form = document.getElementById('solve-button');
+        const fileInput = document.getElementById('sudoku-image');
+        const errorDiv = document.getElementById('error');
+
+        form.addEventListener('click', async () => {
+            const file = fileInput.files[0];
+            if (!file) {
+                errorDiv.textContent = 'Please select an image first.';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('sudoku_image', file);
+
+            try {
+                errorDiv.textContent = '';
+
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    openSolvedBoard(data.solved_board);
+                } else {
+                    errorDiv.textContent = data.error || 'An error occurred.';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Failed to process the image. Please try again.';
+            }
+        });
+
+        function openSolvedBoard(board) {
+            const newTab = window.open();
+            newTab.document.write(`
+                <html>
+                <head>
+                    <title>Solved Sudoku</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+                    <style>
+                        body {
+                            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+                            background: linear-gradient(135deg, #f0f9ff 0%, #cbebff 100%);
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            min-height: 100vh;
+                            margin: 0;
+                            padding: 2rem;
+                            color: #1f2937;
+                        }
+
+                        h1 {
+                            color: #3b82f6;
+                            margin-bottom: 1.5rem;
+                        }
+
+                        .board-container {
+                            background: white;
+                            border-radius: 16px;
+                            padding: 20px;
+                            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+                            border: 1px solid rgba(0,0,0,0.05);
+                        }
+
+                        .row {
+                            display: flex;
+                        }
+
+                        .cell {
+                            width: 50px;
+                            height: 50px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            border: 1px solid #e5e7eb;
+                            font-size: 1.25rem;
+                            font-weight: 600;
+                            color: #3b82f6;
+                        }
+
+                        .cell:nth-child(3n) {
+                            border-right: 2px solid #3b82f6;
+                        }
+
+                        .row:nth-child(3n) .cell {
+                            border-bottom: 2px solid #3b82f6;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>Your Solved Sudoku</h1>
+                    <div class="board-container">
+                        ${board.map(row => `
+                            <div class="row">
+                                ${row.map(cell => `
+                                    <div class="cell">${cell}</div>
+                                `).join('')}
+                            </div>
+                        `).join('')}
+                    </div>
+                </body>
+                </html>
+            `);
+            newTab.document.close();
+        }
+    </script>
 </body>
 </html>

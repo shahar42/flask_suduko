@@ -1,195 +1,188 @@
-import os
-import logging
+# Required Imports
 import cv2
 import numpy as np
-from flask import Flask, request, render_template, redirect, url_for
-from werkzeug.utils import secure_filename
-import uuid
-import traceback
+from flask import Flask, request, jsonify, render_template
+import pytesseract
+from tensorflow.keras.models import load_model
+import os
 
+# Initialize Flask App
 app = Flask(__name__)
 
-# Configuration
-app.config['UPLOAD_FOLDER'] = 'static/images'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+# Load Pre-trained Digit Classifier Model
+MODEL_PATH = r"C:\Users\peleg marelly\Desktop\Python\digit_recognizer.h5"  # Replace with your model path
+model = load_model(MODEL_PATH)
 
-# Ensure directories exist
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-os.makedirs('processed_grid', exist_ok=True)
+# Define directory for saving invalid cells
+INVALID_CELLS_DIR = "invalid_cells"
+os.makedirs(INVALID_CELLS_DIR, exist_ok=True)
 
-# Configure logging
-logging.basicConfig(
-    filename='sudoku_processor.log',
-    level=logging.INFO,
-    format='%(asctime)s:%(levelname)s:%(message)s'
-)
+# Threshold for OCR Confidence (e.g., digits should be detected with at least 70% confidence)
+OCR_CONFIDENCE_THRESHOLD = 0.71  # Adjust as needed
 
+# Preprocess Image: Grayscale + Morphology + Binary Threshold
+def preprocess_image(image):
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    morph_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    processed = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, morph_kernel)
+    # Increase the threshold for better separation of digits and blank spaces
+    _, binary = cv2.threshold(processed, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    return binary
 
-def allowed_file(filename):
-    """Check if file extension is allowed"""
-    return '.' in filename and \
-        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+# Detect Grid: Using Morphological Line Detection
+def detect_grid(binary):
+    horizontal = cv2.morphologyEx(binary, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_RECT, (20, 1)))
+    vertical = cv2.morphologyEx(binary, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_RECT, (1, 20)))
+    grid = cv2.add(horizontal, vertical)
 
+    # Find grid bounding box
+    contours, _ = cv2.findContours(grid, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    largest_box = max(contours, key=cv2.contourArea)
+    return cv2.boundingRect(largest_box)
 
-def detect_sudoku_grid(image_path):
-    """
-    Detect Sudoku grid from uploaded image
-
-    Args:
-        image_path (str): Path to the uploaded image
-
-    Returns:
-        tuple: (detected grid image, success boolean)
-    """
-    try:
-        # Read image in grayscale
-        img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-
-        # Apply adaptive thresholding
-        binary = cv2.adaptiveThreshold(
-            img, 255,
-            cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-            cv2.THRESH_BINARY_INV, 11, 2
-        )
-
-        # Find contours
-        contours, _ = cv2.findContours(
-            binary,
-            cv2.RETR_EXTERNAL,
-            cv2.CHAIN_APPROX_SIMPLE
-        )
-
-        # Filter contours by area
-        grid_candidates = [
-            cnt for cnt in contours
-            if cv2.contourArea(cnt) > 10000  # Minimum area threshold
-        ]
-
-        if not grid_candidates:
-            logging.error("No suitable grid contours found")
-            return None, False
-
-        # Find the largest contour (most likely Sudoku grid)
-        largest_contour = max(grid_candidates, key=cv2.contourArea)
-
-        # Get bounding rectangle of grid
-        x, y, w, h = cv2.boundingRect(largest_contour)
-        grid_img = img[y:y + h, x:x + w]
-
-        logging.info(f"Detected grid: position {x},{y} with size {w}x{h}")
-
-        return grid_img, True
-
-    except Exception as e:
-        logging.error(f"Grid detection error: {str(e)}")
-        logging.error(traceback.format_exc())
-        return None, False
-
-
-def split_grid_into_cells(grid_img):
-    """
-    Split the detected grid into 81 individual cells
-
-    Args:
-        grid_img (numpy.ndarray): Detected Sudoku grid image
-
-    Returns:
-        list: List of cell images
-    """
-    cell_height, cell_width = grid_img.shape[0] // 9, grid_img.shape[1] // 9
+# Extract Individual Cells: Without Perspective Warp
+def extract_cells(image, bounding_box):
+    x, y, w, h = bounding_box
+    cell_size_x, cell_size_y = w // 9, h // 9
     cells = []
 
     for row in range(9):
         for col in range(9):
-            # Compute cell coordinates
-            y_start = row * cell_height
-            x_start = col * cell_width
-
-            cell = grid_img[
-                   y_start:y_start + cell_height,
-                   x_start:x_start + cell_width
-                   ]
-
-            # Crop 12% from each side
-            crop_height = int(cell.shape[0] * 0.12)
-            crop_width = int(cell.shape[1] * 0.12)
-
-            cropped_cell = cell[
-                           crop_height:-crop_height,
-                           crop_width:-crop_width
-                           ]
-
-            # Resize to 28x28
-            processed_cell = cv2.resize(cropped_cell, (28, 28))
-
-            cells.append((f"{row}_{col}", processed_cell))
-
+            x1, y1 = x + col * cell_size_x, y + row * cell_size_y
+            cell = image[y1:y1 + cell_size_y, x1:x1 + cell_size_x]
+            cells.append(((row, col), cell[5:-5, 5:-5]))  # Keep track of row, col
     return cells
 
+# Recognize Digits: Hybrid OCR + CNN Classifier
+def recognize_digits(cells, model):
+    board = np.zeros((9, 9), dtype=int)
+    metadata = []
 
-def save_cells(cells, unique_id):
-    """
-    Save processed cells to disk
+    for (row, col), cell in cells:
+        # Preprocess cell: Crop by 10% on each side
+        height, width = cell.shape
+        crop_x = int(width * 0.1)
+        crop_y = int(height * 0.1)
+        cropped_cell = cell[crop_y:height - crop_y, crop_x:width - crop_x]
 
-    Args:
-        cells (list): List of processed cell tuples (name, image)
-        unique_id (str): Unique identifier for this processing session
-    """
-    cell_dir = os.path.join('processed_grid', unique_id)
-    os.makedirs(cell_dir, exist_ok=True)
+        # Resize cropped cell to 28x28
+        cell_resized = cv2.resize(cropped_cell, (28, 28))
 
-    for cell_name, cell_img in cells:
-        cv2.imwrite(os.path.join(cell_dir, f"{cell_name}.png"), cell_img)
+        # Perform OCR
+        ocr_text = pytesseract.image_to_string(cell_resized, config="--psm 10 digits")
+        ocr_confidence = 1.0  # Default confidence is max for OCR
 
-    logging.info(f"Saved 81 cells for session {unique_id}")
+        if ocr_text.strip().isdigit():
+            digit = int(ocr_text.strip())
+        else:
+            # Use CNN as fallback
+            cell_norm = cell_resized / 255.0
+            pred = model.predict(cell_norm.reshape(1, 28, 28, 1))
+            digit = np.argmax(pred)
 
+            # Calculate confidence of CNN prediction
+            ocr_confidence = np.max(pred)
 
-@app.route('/', methods=['GET', 'POST'])
-def upload_file():
-    """
-    Main route to handle file uploads and processing
-    """
-    if request.method == 'POST':
-        # Check if file was uploaded
-        if 'file' not in request.files:
-            return render_template('index.html', error='No file uploaded')
+        # Only accept digit if it meets the confidence threshold (e.g., 70% confidence)
+        if 1 <= digit <= 9 and ocr_confidence >= OCR_CONFIDENCE_THRESHOLD:
+            # Valid digit, update board and metadata
+            board[row][col] = digit
+            metadata.append({"row": row, "col": col, "digit": digit})
+        else:
+            # Save invalid cells for debugging
+            invalid_path = os.path.join(INVALID_CELLS_DIR, f"invalid_{row}_{col}.png")
+            cv2.imwrite(invalid_path, cell)
 
-        file = request.files['file']
+    return board, metadata
 
-        # Check filename
-        if file.filename == '':
-            return render_template('index.html', error='No selected file')
+# Solve Sudoku Board
+def solve_sudoku(board):
+    def is_valid(num, row, col):
+        # Check row, column, and 3x3 grid
+        for i in range(9):
+            if board[row][i] == num or board[i][col] == num:
+                return False
+        row_start, col_start = 3 * (row // 3), 3 * (col // 3)
+        for i in range(row_start, row_start + 3):
+            for j in range(col_start, col_start + 3):
+                if board[i][j] == num:
+                    return False
+        return True
 
-        if file and allowed_file(file.filename):
-            # Generate unique filename
-            unique_id = str(uuid.uuid4())
-            filename = f"{unique_id}_{secure_filename(file.filename)}"
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
+    def backtrack():
+        for row in range(9):
+            for col in range(9):
+                if board[row][col] == 0:  # Empty cell
+                    for num in range(1, 10):
+                        if is_valid(num, row, col):
+                            board[row][col] = num
+                            if backtrack():
+                                return True
+                            board[row][col] = 0  # Reset if not valid
+                    return False  # If no valid number found, return False
+        return True  # Puzzle is solved when no empty cells remain
 
-            try:
-                # Detect and process grid
-                grid_img, grid_detected = detect_sudoku_grid(filepath)
+    # Debug print to check the board before solving
+    print("Initial Board (Before Solving):")
+    print(board)
 
-                if not grid_detected:
-                    logging.error("Failed to detect Sudoku grid")
-                    return render_template('index.html', error='Unable to detect Sudoku grid')
+    if not backtrack():  # Run backtracking to solve the board
+        print("No solution found!")
+    else:
+        print("Solved Board:")
+        print(board)
 
-                # Split into cells
-                cells = split_grid_into_cells(grid_img)
+    return board
 
-                # Save cells
-                save_cells(cells, unique_id)
+# Prepare Full Sudoku Board
+def prepare_board(image, model):
+    binary = preprocess_image(image)
+    grid_box = detect_grid(binary)
+    cells = extract_cells(binary, grid_box)
+    board, metadata = recognize_digits(cells, model)
+    return board, metadata
 
-                return render_template('index.html', filename=filename)
+# Convert NumPy arrays to native Python types for JSON serialization
+def convert_to_native_types(obj):
+    """Recursively convert NumPy types to native Python types."""
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()  # Convert NumPy array to list
+    elif isinstance(obj, np.generic):
+        return obj.item()  # Convert NumPy scalar types (like int64) to native Python types
+    elif isinstance(obj, dict):
+        return {key: convert_to_native_types(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_to_native_types(item) for item in obj]
+    else:
+        return obj  # Return other types unchanged
 
-            except Exception as e:
-                logging.error(f"Processing error: {str(e)}")
-                return render_template('index.html', error='Processing error')
-
+# Flask Routes
+@app.route('/')
+def index():
     return render_template('index.html')
 
+# Flask Routes
+@app.route('/upload', methods=['POST'])
+def upload_image():
+    if 'sudoku_image' not in request.files:
+        return jsonify({"error": "No image uploaded"}), 400
 
-if __name__ == '__main__':
+    # Read uploaded file
+    file = request.files['sudoku_image']
+    image = cv2.imdecode(np.frombuffer(file.read(), np.uint8), cv2.IMREAD_COLOR)
+
+    # Prepare the board
+    board, metadata = prepare_board(image, model)
+    solved_board = solve_sudoku(board)  # Get the solved board
+
+    # Convert NumPy arrays to Python lists (which are JSON serializable)
+    response = {
+        "board": convert_to_native_types(board),  # Ensure conversion here
+        "solved_board": convert_to_native_types(solved_board),  # Ensure conversion here
+        "metadata": convert_to_native_types(metadata)  # Ensure conversion here
+    }
+
+    return jsonify(response)
+
+if __name__ == "__main__":
     app.run(debug=True)
