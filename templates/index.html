@@ -112,6 +112,21 @@
             font-weight: 500;
         }
 
+        .spinner {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid var(--primary-color); /* Blue */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         footer {
             margin-top: auto;
             text-align: center;
@@ -143,6 +158,9 @@
         </div>
 
         <div id="error" class="error"></div>
+        <div id="spinner-container" style="display: none;">
+            <div class="spinner"></div>
+        </div>
     </div>
 
     <footer>
@@ -153,6 +171,7 @@
         const form = document.getElementById('solve-button');
         const fileInput = document.getElementById('sudoku-image');
         const errorDiv = document.getElementById('error');
+        const spinnerContainer = document.getElementById('spinner-container');
 
         form.addEventListener('click', async () => {
             const file = fileInput.files[0];
@@ -166,6 +185,7 @@
 
             try {
                 errorDiv.textContent = '';
+                spinnerContainer.style.display = 'block'; // Show spinner
 
                 const response = await fetch('/upload', {
                     method: 'POST',
@@ -174,12 +194,15 @@
 
                 const data = await response.json();
 
+                spinnerContainer.style.display = 'none'; // Hide spinner
+
                 if (response.ok) {
                     openSolvedBoard(data.solved_board);
                 } else {
                     errorDiv.textContent = data.error || 'An error occurred.';
                 }
             } catch (error) {
+                spinnerContainer.style.display = 'none'; // Hide spinner
                 errorDiv.textContent = 'Failed to process the image. Please try again.';
             }
         });
@@ -239,6 +262,10 @@
 
                         .row:nth-child(3n) .cell {
                             border-bottom: 2px solid #3b82f6;
+                        }
+
+                        .row:nth-child(9) .cell:nth-child(9) {
+                            border-bottom-right-radius: 8px;
                         }
                     </style>
                 </head>
