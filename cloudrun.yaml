@@ -1,0 +1,28 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: sudoku-app
+spec:
+  template:
+    spec:
+      containers:
+        - image: gcr.io/sodu-447114/sudoku-app:latest
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz  # Adjust this if you have a specific health check endpoint
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3  # Timeout should be less than periodSeconds
+            failureThreshold: 3
+            successThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /healthz  # Same as readiness if using the same endpoint
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10  # Period should be greater than timeout
+            timeoutSeconds: 5  # Timeout should be less than periodSeconds
+            failureThreshold: 5

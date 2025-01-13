@@ -1,0 +1,50 @@
+# Ignore Python cache files and directories
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore virtual environments
+.venv/
+env/
+venv/
+
+# Ignore development artifacts
+*.log
+*.tmp
+*.bak
+*.swp
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Ignore version control
+.git/
+.gitignore
+
+# Ignore large assets (optional, adjust as needed)
+# Exclude dataset files if they are not required at runtime
+data/
+datasets/
+
+# Ignore application-specific temporary or debug files
+*.debug
+debug.log
+
+# Ignore test files (if not needed in production)
+tests/
+*.test
+
+# Ignore large media files (optional)
+media/
+uploads/
+
+# Ignore build artifacts (if any)
+dist/
+build/
+
+# Optional: Exclude all files by default and explicitly include required files
+# !app/
+# !requirements.txt
+# !Dockerfile
